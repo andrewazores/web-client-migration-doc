@@ -1,0 +1,32 @@
+:sectlinks:
+:toc:
+:source-highlighter: highlightjs
+
+= Angular 1/Angular 4 Hybrid App and Migration Guide
+Andrew Azores <aazores@redhat.com>
+
+Lessons Learned in Migrating an AngularJS App To AngularJS/Angular Hybrid
+
+Assumptions: Using Webpack, karma/mocha/sinon/should/istanbul/eslint
+
+This guide is a supplement to the official Angular upgrade/migration document:
+
+https://angular.io/guide/upgrade#upgrading-from-angularjs
+
+The official guide assumes you are using the TypeScript compiler on its own,
+not with a build tool like Webpack, and also assumes that you are using Jasmine
+test runner, and includes no guidance on setting up Istanbul code coverage
+tooling either. There is a separate official Angular guide to using Webpack,
+but it also doesn't talk about hybrid apps or code coverage.  It also glosses
+over any kind of pre-bootstrap application logic, and since it uses only very
+simplistic example code for both AngularJS and Angular, doesn't cover some
+pitfalls that can occur depending on the existing AngularJS project setup.
+This guide aims only to help with these specific hurdles.
+
+include::adding_typescript.adoc[]
+
+include::upgrading_services.adoc[]
+
+include::testing.adoc[]
+
+include::code_coverage.adoc[]

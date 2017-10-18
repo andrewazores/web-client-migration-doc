@@ -1,0 +1,197 @@
+== Upgrading AngularJS services for use in Angular
+
+It's important to ensure that AngularJS module code is not actually executed
+until after everything has been initialized and both frameworks have been
+bootstrapped. In our case, the convention was for services, controllers, etc.
+to live in their own miniature AngularJS modules, and for those modules to be
+registered simply by the file being imported by some other file. Since all of
+this happens statically before bootstrap time (kind of - we also use oclazyload,
+but this works under the same model if you imagine the oclazyload loading
+process as a module subtree bootstrapping), everything gets initialized and
+registered before bootstrap. But this model no longer works when both frameworks
+need to be bootstrapped, because you end up with difficult to resolve async
+dependencies cropping up depending on which files are imported when.
+
+This is also an issue if you use Webpack's require.context in order to do
+build-time dynamic imports.
+
+The solution used in Thermostat.next() Web-Client is to put all of this
+AngularJS module setup work into exported functions and to call these functions
+at the appropriate time in order to control the timing of loading, as well as
+to avoid executing the setup code multiple times. For example, here is a diff
+from several files relating to our auth interceptor and services module:
+
+[source,javascript]
+----
+--- a/src/app/ang-app.module.js
++++ b/src/app/ang-app.module.js
+@@ -40,7 +40,6 @@
+ import 'angularjs-datatables/dist/plugins/select/angular-datatables.select.min.js';
+ 
+ import {default as authModule, config as authModSetup} from 'components/auth/auth.module.js';
+-import authInterceptorFactory from './auth-interceptor.factory.js';
+ 
+ require.ensure([], () => {
+   require('angular-patternfly/node_modules/datatables.net-dt/css/jquery.dataTables.css');
+@@ -55,6 +54,8 @@
+ 
+ /* istanbul ignore next */
+ function initializeApplication () {
++  require('shared/services/services.module.js').init();
++  let authInterceptorFactory = require('./auth-interceptor.factory.js').default;
+   return angular
+     .module(angApp, [
+       'ui.router',
+----
+
+[source,javascript]
+----
+--- a/src/app/shared/services/services.module.js
++++ b/src/app/shared/services/services.module.js
+@@ -35,5 +35,10 @@
+   ])
+   .name;
+ 
+-let req = require.context('./', true, /\.service\.js/);
+-req.keys().map(req);
++export function init () {
++  let req = require.context('./', true, /\.service\.js/);
++  req.keys().map(key => {
++    let mod = req(key);
++    mod.init();
++  });
++}
+----
+
+[source,typescript]
+----
+--- a/src/app/shared/services/services.module.ts
++++ b/src/app/shared/services/services.module.ts
+@@ -27,9 +27,29 @@
+ 
+ import { NgModule } from '@angular/core';
+ 
++import {
++  commandChannelServiceProvider,
++  extractClassServiceProvider,
++  localStorageServiceProvider,
++  metricToBigIntServiceProvider,
++  multichartServiceProvider,
++  sanitizeServiceProvider,
++  scaleBytesServiceProvider,
++  webSocketFactoryProvider
++} from './ajs-upgraded-providers';
++
+ @NgModule({
+   imports: [],
+   declarations: [],
+-  providers: []
++  providers: [
++    commandChannelServiceProvider,
++    extractClassServiceProvider,
++    localStorageServiceProvider,
++    metricToBigIntServiceProvider,
++    multichartServiceProvider,
++    sanitizeServiceProvider,
++    scaleBytesServiceProvider,
++    webSocketFactoryProvider
++  ]
+ })
+ export class ServicesModule {}
+----
+
+[source,javascript]
+----
+--- a/src/app/shared/services/websocket-factory.service.js
++++ b/src/app/shared/services/websocket-factory.service.js
+@@ -28,7 +28,7 @@
+ import servicesModule from './services.module.js';
+ 
+ /* istanbul ignore next */
+-class WebSocketFactory {
++export class WebSocketFactory {
+   createSocket (connectUrl) {
+     if ('WebSocket' in window) {
+       return new WebSocket(connectUrl);
+@@ -40,6 +40,8 @@
+   }
+ }
+ 
+-angular
+-  .module(servicesModule)
+-  .service('webSocketFactory', WebSocketFactory);
++export function init () {
++  angular
++    .module(servicesModule)
++    .service('webSocketFactory', WebSocketFactory);
++}
+----
+
+[source,typescript]
+----
+--- /dev/null
++++ b/src/app/shared/services/ajs-upgraded-providers.ts
+@@ -0,0 +1,82 @@
++
++import { CommandChannelService } from './command-channel.service.js';
++export const commandChannelServiceProvider = {
++  provide: CommandChannelService,
++  useClass: CommandChannelService,
++  deps: ['$injector']
++};
++
++import { ExtractClassService } from './extract-class.service.js';
++export const extractClassServiceProvider = {
++  provide: ExtractClassService,
++  useClass: ExtractClassService,
++  deps: ['$injector']
++};
++
++import { LocalStorageService } from './local-storage.service.js';
++export const localStorageServiceProvider = {
++  provide: LocalStorageService,
++  useClass: LocalStorageService,
++  deps: ['$injector']
++};
++
++import { MetricToBigIntService } from './metric-to-big-int.service.js';
++export const metricToBigIntServiceProvider = {
++  provide: MetricToBigIntService,
++  useClass: MetricToBigIntService,
++  deps: ['$injector']
++};
++
++import { MultichartService } from './multichart.service.js';
++export const multichartServiceProvider = {
++  provide: MultichartService,
++  useClass: MultichartService,
++  deps: ['$injector']
++};
++
++import  { SanitizeService } from './sanitize.service.js';
++export const sanitizeServiceProvider = {
++  provide: SanitizeService,
++  useClass: SanitizeService,
++  deps: ['$injector']
++};
++
++import { ScaleBytesService } from './scale-bytes.service.js';
++export const scaleBytesServiceProvider = {
++  provide: ScaleBytesService,
++  useClass: ScaleBytesService,
++  deps: ['$injector']
++};
++
++import { WebSocketFactory } from './websocket-factory.service.js';
++export const webSocketFactoryProvider = {
++  provide: WebSocketFactory,
++  useClass: WebSocketFactory,
++  deps: ['$injector']
++};
+----
+
+The ajs-upgraded-providers imports each of the AngularJS services and wraps it
+into an Angular provider, using the existing service class as the injection
+token as well as the class for the provider itself. This allows the service to
+remain implemented in JavaScript and registered by AngularJS, but to be
+injectable and usable by both AngularJS and new Angular code.

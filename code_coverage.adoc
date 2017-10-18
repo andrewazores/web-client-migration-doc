@@ -1,0 +1,30 @@
+== Code Coverage with Istanbul
+
+Much of the difficulties had with setting up Istanbul code coverage tooling
+were hidden in the details of the test environment setup in the previous
+section, specifically with setting up the "alternative mode" file and
+sourcemaps.
+
+To configure Istanbul coverage for TypeScript, which works in conjunction with
+the JavaScript coverage already included in the configuration files, add the
+following.
+
+Install the npm dependency `karma-typescript`.
+
+To webpack.config.js config.module array, add:
+
+    {
+      test: /^(?!.*\.spec\.ts$).*\.ts$/,
+      include: __dirname + '/src/app/',
+      exclude: /(node_modules|\.spec\.ts$)/,
+      loader: 'istanbul-instrumenter-loader',
+      enforce: 'post',
+      options: {
+        esModules: true
+      }
+    }
+
+In tsconfig.json, add `"sourceMap": true` to the `compilerOptions` object.
+
+And in karma.conf.js, add `'karma-typescript'` to the `frameworks` and
+`reporters` arrays.

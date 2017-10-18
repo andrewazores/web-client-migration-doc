@@ -1,0 +1,193 @@
+== Adding TypeScript and Angular 4
+
+Add `@angular/core`, `@angular/platform-browser`, `@angular/upgrade`,
+`@types/angular`, `@types/core-js`, `reflect-metadata`, `ts-loader`,
+`typescript`, `zone.js` npm dependencies.
+
+If existing app entrypoint (ex. `app.module.js`) contains any kind of
+pre-bootstrap logic, extract this into a function and export it from the
+module. Later we will import this function from within the Angular 4 entrypoint
+and invoke it in the new, modified bootstrap sequence. In our case, the
+pre-bootstrap logic includes a jQuery request, so we make this function return
+a promise that resolves after that request completes. This function is named
+doInit, but the name is not especially important. We use it in the new
+`app.module.ts` as below:
+
+.app.module.ts
+[source,typescript]
+----
+import * as angular from 'angular';
+import { default as angApp, doInit } from './ang-app.module.js';
+
+import {
+  NgModule,
+  Inject,
+  forwardRef
+} from '@angular/core';
+
+import { BrowserModule } from '@angular/platform-browser';
+import { HttpClientModule } from '@angular/common/http';
+import { UpgradeModule } from '@angular/upgrade/static';
+import { UpgradeAdapter } from '@angular/upgrade';
+
+import { ServicesModule } from './shared/services/services.module';
+
+const upgradeAdapter = new UpgradeAdapter(forwardRef(() => AppModule));
+@NgModule({
+  imports: [
+    // Angular core modules
+    BrowserModule,
+    HttpClientModule,
+    UpgradeModule,
+
+    // App Modules
+    ServicesModule
+  ],
+  declarations: [],
+})
+export class AppModule {
+
+  constructor(@Inject(UpgradeModule) private upgradeModule : UpgradeModule) {}
+
+  ngDoBootstrap() {
+    doInit().then(() => {
+      this.upgradeModule.bootstrap(document.body, [angApp], { strictDi: true });
+    });
+  }
+
+}
+----
+
+This is then referenced by the new app entrypoint, `main.ts`:
+
+.main.ts
+[source,typescript]
+----
+import './rx-subject.stub.ts';
+import 'zone.js';
+import 'reflect-metadata';
+
+import { UpgradeModule } from '@angular/upgrade/static';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { AppModule } from './app/app.module';
+
+import { DetermineGatewayUrl } from './gateway-url-helper.js';
+
+DetermineGatewayUrl().then(() => {
+    platformBrowserDynamic().bootstrapModule(AppModule);
+});
+----
+
+The second two of the first three imports here are essentially shims to set up
+the JavaScript environment correctly when using Webpack+ts-loader, AFAIUI. The
+first import looks like this:
+
+.rx-subject.stub.ts
+[source,typescript]
+----
+import { Operator } from 'rxjs/Operator';
+import { Observable } from 'rxjs/Observable';
+
+declare module 'rxjs/Subject' {
+  interface Subject<T> {
+    lift<R>(operator: Operator<T, R>): Observable<R>;
+  }
+}
+----
+
+and is used to work around an incorrect type definition in rxjs, which is used
+internally by Angular 4 (?).
+
+`gateway-url-helper.js` is a Thermostat.next() Web-Client-specific helper. The
+important takeaway is that this contains our pre-bootstrap application logic.
+The function returns a Promise. In this case it is a Promise<void>, but this
+can be anything you need.
+
+`ang-app.module.js` is the renamed app.module.js from the AngularJS initial
+version of our Web-Client. Removing most unimportant project-specific details,
+the structure of the file looks like this:
+
+.ang-app.module.js
+[source,javascript]
+----
+const angApp = 'appModule';
+export default angApp;
+
+function initializeApplication () {
+  require('shared/config/config.module.js').init();
+  require('shared/services/services.module.js').init();
+  let authInterceptorFactory = require('./auth-interceptor.factory.js').default;
+  return angular
+    .module(angApp, [
+      'ui.router',
+      'ui.bootstrap',
+      'patternfly',
+      'patternfly.navigation',
+      'patternfly.table',
+      angularTranslate,
+      authModule,
+      authInterceptorFactory,
+      // non-core modules
+      require('./app.routing.js').default,
+      require('./app-root.component.js').default
+    ])
+    .config($httpProvider => {
+      'ngInject';
+      $httpProvider.interceptors.push(authInterceptorFactory);
+    })
+    .name;
+}
+
+export function doInit () {
+  return new Promise((resolve, reject) => {
+    let appModule = initializeApplication();
+    authModSetup(process.env.NODE_ENV, () => resolve());
+  });
+}
+----
+
+Our `tsconfig.json` looks like this:
+
+.tsconfig.json
+[source,json]
+----
+{
+  "files": [
+    "src/main.ts"
+  ],
+  "compilerOptions": {
+    "outDir": "./dist",
+    "noImplicitAny": true,
+    "target": "es5",
+    "experimentalDecorators": true,
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "lib": [
+      "es2015",
+      "dom"
+    ]
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
+----
+
+Webpack configuration also needs to be modified to load TypeScript files. The
+relevant snippets look like:
+
+.webpack.config.js
+[source,javascript]
+----
+config.entry = isTest ? void 0 : {
+  app: './src/main.ts'
+};
+
+config.module.rules = [
+    {
+      test: /\.ts$/,
+      use: 'ts-loader',
+      exclude: /node_modules/
+    }
+]
+----

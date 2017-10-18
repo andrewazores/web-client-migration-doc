@@ -1,0 +1,179 @@
+== Testing
+
+Not all of the webpack configuration is relevant for karma test runs. If you
+include the entire webpack config, I suggest removing that in favour of
+including only the module, resolve, and devtool parts.
+
+You will also need to install type declarations for test frameworks and
+libraries: `@types/mocha`, `@types/should`, `@types/sinon`.
+
+Using karma in the "main" mode where karma itself discovers all source and test
+files resulted in Node out-of-memory errors, so our recommendation is to use
+the alternative mode where you point karma at a source file that does a
+require.context to bundle all of the files together at once.
+
+.karma.conf.js
+[source,javascript]
+----
+var webpackConfig = require('./webpack.config');
+module.exports = function (config) {
+  config.set({
+    basePath: '',
+
+    frameworks: ['mocha', 'should-sinon', 'sinon', 'should'],
+
+    files: [
+      'src/app/components/auth/keycloak.stub.js',
+      'src/tests.webpack.js'
+    ],
+
+    preprocessors: {
+      'src/app/components/auth/keycloak.stub.js': ['webpack', 'sourcemap'],
+      'src/tests.webpack.js': ['webpack', 'sourcemap']
+    },
+
+    reporters: ['mocha', 'beep', 'junit', 'coverage-istanbul'],
+
+    junitReporter: {
+      outputDir: 'test-reports'
+    },
+
+    coverageIstanbulReporter: {
+      reports: ['text-summary', 'html', 'cobertura'],
+      fixWebpackSourcePaths: true,
+
+      'report-config': {
+        html: {
+          subdir: 'html'
+        }
+      }
+    },
+
+    exclude: [],
+
+    port: 9876,
+
+    colors: true,
+
+    browsers: ['PhantomJS'],
+
+    webpack: {
+      module: webpackConfig.module,
+      resolve: webpackConfig.resolve,
+      devtool: webpackConfig.devtool
+    },
+
+    webpackMiddleware: {
+      noInfo: 'errors-only'
+    },
+
+    singleRun: true
+  });
+};
+----
+
+Here are the relevant snippets of webpack.config.js:
+
+.webpack.config.js
+[source,javascript]
+----
+  config.resolve = {
+    alias: {
+      'jquery': 'angular-patternfly/node_modules/patternfly/node_modules/jquery',
+      'angular': 'angular-patternfly/node_modules/angular',
+      'd3': 'angular-patternfly/node_modules/patternfly/node_modules/d3',
+      'c3': 'angular-patternfly/node_modules/patternfly/node_modules/c3',
+      'bootstrap': 'angular-patternfly/node_modules/patternfly/node_modules/bootstrap/dist/js/bootstrap.js',
+      'bootstrap-switch': 'angular-patternfly/node_modules/patternfly/node_modules/bootstrap-switch',
+
+      'assets': path.resolve(__dirname, 'src', 'assets'),
+      'components': path.resolve(__dirname, 'src', 'app', 'components'),
+      'images': 'assets/images',
+      'scss': 'assets/scss',
+      'shared': path.resolve(__dirname, 'src', 'app', 'shared'),
+      'templates': 'shared/templates'
+    },
+    extensions: [ '.ts', '.js' ]
+  };
+
+  if (isTest) {
+    config.devtool = 'inline-source-map';
+  } else if (isProd || isTesting) {
+    config.devtool = 'source-map';
+  } else {
+    config.devtool = 'eval-source-map';
+  }
+
+  config.module = {
+    rules: [{
+      test: /\.js$/,
+      loader: 'babel-loader',
+      exclude: /node_modules/
+    }, {
+      test: /\.ts$/,
+      use: 'ts-loader?silent=true',
+      exclude: /node_modules/
+    }, {
+      test: /\.scss$/,
+      loader: ['style-loader', 'css-loader', 'sass-loader'],
+      exclude: /node_modules/
+    }, {
+      test: /\.css$/,
+      use: ['style-loader', 'css-loader']
+    }, {
+      test: /\.(png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/,
+      loader: 'file-loader'
+    }, {
+      test: /\.html$/,
+      loader: 'html-loader'
+    }, {
+      test: /\.locale\.yaml$/,
+      loader: ['json-loader', 'yaml-loader']
+    }, {
+      test: /^(?!.*\.spec\.js$).*\.js$/,
+      include: __dirname + '/src/app/',
+      loaders: ['istanbul-instrumenter-loader', 'babel-loader']
+    }
+    }]
+  };
+----
+
+This is the "alternative mode" source file that the karma.conf.js is pointed at:
+
+.src/tests.webpack.js
+[source,javascript]
+----
+import 'core-js/client/core.js';
+import 'zone.js/dist/zone.js';
+import 'zone.js/dist/long-stack-trace-zone.js';
+import 'zone.js/dist/proxy.js';
+import 'zone.js/dist/sync-test.js';
+import 'zone.js/dist/mocha-patch.js';
+import 'zone.js/dist/async-test.js';
+import 'zone.js/dist/fake-async-test.js';
+
+import 'angular';
+import 'angular-patternfly';
+import '@uirouter/angularjs';
+import angularTranslate from 'angular-translate';
+import 'angular-translate-interpolation-messageformat';
+import 'oclazyload';
+
+import 'angular-mocks/angular-mocks';
+
+import { getTestBed } from "@angular/core/testing";
+import {
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting
+} from "@angular/platform-browser-dynamic/testing";
+
+getTestBed().initTestEnvironment(
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting()
+);
+
+window.tmsGatewayUrl = 'http://localhost:8888/';
+
+const testsContext = require.context('./app', true, /\.spec\.(js|ts)$/);
+testsContext.keys().forEach(testsContext);
+----
