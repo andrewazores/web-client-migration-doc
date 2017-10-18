@@ -96,7 +96,7 @@ declare module 'rxjs/Subject' {
 ----
 
 and is used to work around an incorrect type definition in rxjs, which is used
-internally by Angular 4 (?).
+internally by Angular 4: https://github.com/ReactiveX/rxjs/issues/2705 .
 
 `gateway-url-helper.js` is a Thermostat.next() Web-Client-specific helper. The
 important takeaway is that this contains our pre-bootstrap application logic.
