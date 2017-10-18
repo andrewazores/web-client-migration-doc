@@ -10,7 +10,8 @@ libraries: `@types/mocha`, `@types/should`, `@types/sinon`.
 Using karma in the "main" mode where karma itself discovers all source and test
 files resulted in Node out-of-memory errors, so our recommendation is to use
 the alternative mode where you point karma at a source file that does a
-require.context to bundle all of the files together at once.
+require.context to bundle all of the files together at once. In our case we
+have named this file `tests.webpack.js` and placed it under our `src/`.
 
 .karma.conf.js
 [source,javascript]
