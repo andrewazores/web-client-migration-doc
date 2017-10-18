@@ -1,5 +1,9 @@
 == Upgrading AngularJS services for use in Angular
 
+App startup order:
+
+Angular bootstrap -> AngularJS bootstrap -> AngularJS module configuration
+
 It's important to ensure that AngularJS module code is not actually executed
 until after everything has been initialized and both frameworks have been
 bootstrapped. In our case, the convention was for services, controllers, etc.
@@ -13,13 +17,19 @@ need to be bootstrapped, because you end up with difficult to resolve async
 dependencies cropping up depending on which files are imported when.
 
 This is also an issue if you use Webpack's require.context in order to do
-build-time dynamic imports.
+build-time dynamic imports. In this case, you must ensure that any source files
+which are `require()` d only export JavaScript modules, functions, etc., but
+do *not* immediately declare any new Angular modules (using
+`angular.module("foo", [])` - note the second, array parameter). If the file
+does need to declare a new Angular module then this logic should be moved into
+an exported function, and that function imported and then called elsewhere in
+application logic explicitly after AngularJS bootstrap has occurred.
 
 The solution used in Thermostat.next() Web-Client is to put all of this
 AngularJS module setup work into exported functions and to call these functions
-at the appropriate time in order to control the timing of loading, as well as
-to avoid executing the setup code multiple times. For example, here is a diff
-from several files relating to our auth interceptor and services module:
+in an init function in our ang-app.module.js, as well as to avoid executing the
+setup code multiple times. For example, here is a diff from several files
+relating to our auth interceptor and services module:
 
 [source,javascript]
 ----
