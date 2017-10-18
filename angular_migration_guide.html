@@ -681,6 +681,12 @@ config.module.rules = [
 <h2 id="_upgrading_angularjs_services_for_use_in_angular"><a class="link" href="#_upgrading_angularjs_services_for_use_in_angular">Upgrading AngularJS services for use in Angular</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
+<p>App startup order:</p>
+</div>
+<div class="paragraph">
+<p>Angular bootstrap &#8594; AngularJS bootstrap &#8594; AngularJS module configuration</p>
+</div>
+<div class="paragraph">
 <p>It&#8217;s important to ensure that AngularJS module code is not actually executed
 until after everything has been initialized and both frameworks have been
 bootstrapped. In our case, the convention was for services, controllers, etc.
@@ -695,14 +701,20 @@ dependencies cropping up depending on which files are imported when.</p>
 </div>
 <div class="paragraph">
 <p>This is also an issue if you use Webpack&#8217;s require.context in order to do
-build-time dynamic imports.</p>
+build-time dynamic imports. In this case, you must ensure that any source files
+which are <code>require()</code> d only export JavaScript modules, functions, etc., but
+do <strong>not</strong> immediately declare any new Angular modules (using
+<code>angular.module("foo", [])</code> - note the second, array parameter). If the file
+does need to declare a new Angular module then this logic should be moved into
+an exported function, and that function imported and then called elsewhere in
+application logic explicitly after AngularJS bootstrap has occurred.</p>
 </div>
 <div class="paragraph">
 <p>The solution used in Thermostat.next() Web-Client is to put all of this
 AngularJS module setup work into exported functions and to call these functions
-at the appropriate time in order to control the timing of loading, as well as
-to avoid executing the setup code multiple times. For example, here is a diff
-from several files relating to our auth interceptor and services module:</p>
+in an init function in our ang-app.module.js, as well as to avoid executing the
+setup code multiple times. For example, here is a diff from several files
+relating to our auth interceptor and services module:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -720,6 +732,10 @@ from several files relating to our auth interceptor and services module:</p>
 
  /* istanbul ignore next */
  function initializeApplication () {
+  // services.module.js exports one of these module init functions, so here,
+  // temporally after bootstrap has been performed, we require() that file and
+  // invoke the init function, which will declare and register our shared
+  // services module in AngularJS
 +  require('shared/services/services.module.js').init();
 +  let authInterceptorFactory = require('./auth-interceptor.factory.js').default;
    return angular
@@ -737,6 +753,11 @@ from several files relating to our auth interceptor and services module:</p>
 
 -let req = require.context('./', true, /\.service\.js/);
 -req.keys().map(req);
+// this is the shared services module init function that we just imported and
+// invoked in ang-app.module.js. It uses a Webpack require.context() for a
+// build-time dynamic discovery of all adjacent *.service.js files, which
+// individually implement some shared service and register it upon the shared
+// services module.
 +export function init () {
 +  let req = require.context('./', true, /\.service\.js/);
 +  req.keys().map(key =&gt; {
@@ -745,6 +766,9 @@ from several files relating to our auth interceptor and services module:</p>
 +  });
 +}</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>This Angular module sets up our AngularJS service providers for DI under Angular.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -791,6 +815,8 @@ from several files relating to our auth interceptor and services module:</p>
  import servicesModule from './services.module.js';
 
  /* istanbul ignore next */
+// the class is exported so that it can be used as an injection token by the
+// upgraded service provider seen below.
 -class WebSocketFactory {
 +export class WebSocketFactory {
    createSocket (connectUrl) {
@@ -800,6 +826,13 @@ from several files relating to our auth interceptor and services module:</p>
    }
  }
 
+// here is another example of the init function convention, this time at the
+// level of an individual shared service. This file does not declare a new
+// AngularJS module, it only registers the WebSocketFactory class as a provider
+// for "webSocketFactory". We do not want to run this code every time an
+// external file imports websocket-factory.service.js, which will happen
+// whenever another module has a dependency on the WebSocketFactory class and
+// must import it for use as an Angular injection token.
 -angular
 -  .module(servicesModule)
 -  .service('webSocketFactory', WebSocketFactory);
@@ -809,6 +842,23 @@ from several files relating to our auth interceptor and services module:</p>
 +    .service('webSocketFactory', WebSocketFactory);
 +}</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>This file defines Angular providers that import class definitions from shared
+services implementation files and uses those definitions as both the injection
+token and the implementation for a service. Here we are also injecting the
+$injector service to each when it is instantiated by the Angular DI framework.
+You can change the "$injector" dependency to suit each service, but there may
+be difficulties with this approach as you incrementally migrate pieces from
+AngularJS to Angular where dependencies are not injectable in one framework
+when they are available in the other. To avoid this, you can use the $injector
+service directly, which will be available in both frameworks.</p>
+</div>
+<div class="paragraph">
+<p>This approach allows the service to remain implemented in JavaScript and
+registered by AngularJS, as well as registered with Angular. This results in
+the service class being injectable and usable by both AngularJS and Angular
+code.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -872,13 +922,6 @@ from several files relating to our auth interceptor and services module:</p>
 +  deps: ['$injector']
 +};</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>The ajs-upgraded-providers imports each of the AngularJS services and wraps it
-into an Angular provider, using the existing service class as the injection
-token as well as the class for the provider itself. This allows the service to
-remain implemented in JavaScript and registered by AngularJS, but to be
-injectable and usable by both AngularJS and new Angular code.</p>
 </div>
 </div>
 </div>
