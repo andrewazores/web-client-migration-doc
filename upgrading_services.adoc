@@ -47,6 +47,10 @@ relating to our auth interceptor and services module:
  
  /* istanbul ignore next */
  function initializeApplication () {
+  // services.module.js exports one of these module init functions, so here,
+  // temporally after bootstrap has been performed, we require() that file and
+  // invoke the init function, which will declare and register our shared
+  // services module in AngularJS
 +  require('shared/services/services.module.js').init();
 +  let authInterceptorFactory = require('./auth-interceptor.factory.js').default;
    return angular
@@ -64,6 +68,11 @@ relating to our auth interceptor and services module:
  
 -let req = require.context('./', true, /\.service\.js/);
 -req.keys().map(req);
+// this is the shared services module init function that we just imported and
+// invoked in ang-app.module.js. It uses a Webpack require.context() for a
+// build-time dynamic discovery of all adjacent *.service.js files, which
+// individually implement some shared service and register it upon the shared
+// services module.
 +export function init () {
 +  let req = require.context('./', true, /\.service\.js/);
 +  req.keys().map(key => {
@@ -72,6 +81,8 @@ relating to our auth interceptor and services module:
 +  });
 +}
 ----
+
+This Angular module sets up our AngularJS service providers for DI under Angular.
 
 [source,typescript]
 ----
@@ -118,6 +129,8 @@ relating to our auth interceptor and services module:
  import servicesModule from './services.module.js';
  
  /* istanbul ignore next */
+// the class is exported so that it can be used as an injection token by the
+// upgraded service provider seen below.
 -class WebSocketFactory {
 +export class WebSocketFactory {
    createSocket (connectUrl) {
@@ -127,6 +140,13 @@ relating to our auth interceptor and services module:
    }
  }
  
+// here is another example of the init function convention, this time at the
+// level of an individual shared service. This file does not declare a new
+// AngularJS module, it only registers the WebSocketFactory class as a provider
+// for "webSocketFactory". We do not want to run this code every time an
+// external file imports websocket-factory.service.js, which will happen
+// whenever another module has a dependency on the WebSocketFactory class and
+// must import it for use as an Angular injection token.
 -angular
 -  .module(servicesModule)
 -  .service('webSocketFactory', WebSocketFactory);
@@ -136,6 +156,21 @@ relating to our auth interceptor and services module:
 +    .service('webSocketFactory', WebSocketFactory);
 +}
 ----
+
+This file defines Angular providers that import class definitions from shared
+services implementation files and uses those definitions as both the injection
+token and the implementation for a service. Here we are also injecting the
+$injector service to each when it is instantiated by the Angular DI framework.
+You can change the "$injector" dependency to suit each service, but there may
+be difficulties with this approach as you incrementally migrate pieces from
+AngularJS to Angular where dependencies are not injectable in one framework
+when they are available in the other. To avoid this, you can use the $injector
+service directly, which will be available in both frameworks.
+
+This approach allows the service to remain implemented in JavaScript and
+registered by AngularJS, as well as registered with Angular. This results in
+the service class being injectable and usable by both AngularJS and Angular
+code.
 
 [source,typescript]
 ----
@@ -199,9 +234,3 @@ relating to our auth interceptor and services module:
 +  deps: ['$injector']
 +};
 ----
-
-The ajs-upgraded-providers imports each of the AngularJS services and wraps it
-into an Angular provider, using the existing service class as the injection
-token as well as the class for the provider itself. This allows the service to
-remain implemented in JavaScript and registered by AngularJS, but to be
-injectable and usable by both AngularJS and new Angular code.
