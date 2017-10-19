@@ -11,20 +11,96 @@ following.
 
 Install the npm dependency `karma-typescript`.
 
-To webpack.config.js config.module array, add:
+To `webpack.config.js` config.module array, add:
+
+      config.module = {
+        rules: [{
+          test: /\.js$/,
+          loader: 'babel-loader',
+          exclude: /node_modules/
+        }, {
+          test: /\.ts$/,
+          use: 'ts-loader?silent=true',
+          exclude: /node_modules/
+        }, {
+          test: /\.scss$/,
+          loader: ['style-loader', 'css-loader', 'sass-loader'],
+          exclude: /node_modules/
+        }, {
+          test: /\.css$/,
+          use: ['style-loader', 'css-loader']
+        }, {
+          test: /\.(png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/,
+          loader: 'file-loader'
+        }, {
+          test: /\.html$/,
+          loader: 'html-loader'
+        }, {
+          test: /\.locale\.yaml$/,
+          loader: ['json-loader', 'yaml-loader']
+        }, {
+           test: /^(?!.*\.spec\.js$).*\.js$/,
+           include: __dirname + '/src/app/',
+           loaders: ['istanbul-instrumenter-loader', 'babel-loader']
+    +    }, {
+    +      test: /^(?!.*\.spec\.ts$).*\.ts$/,
+    +      include: __dirname + '/src/app/',
+    +      exclude: /(node_modules|\.spec\.ts$)/,
+    +      loader: 'istanbul-instrumenter-loader',
+    +      enforce: 'post',
+    +      options: {
+    +        esModules: true
+    +      }
+         }]
+       };
+
+In `tsconfig.json`, add `"sourceMap": true` to the `compilerOptions` object:
 
     {
-      test: /^(?!.*\.spec\.ts$).*\.ts$/,
-      include: __dirname + '/src/app/',
-      exclude: /(node_modules|\.spec\.ts$)/,
-      loader: 'istanbul-instrumenter-loader',
-      enforce: 'post',
-      options: {
-        esModules: true
-      }
+      "files": [
+        "src/rx-subject.stub.ts",
+        "src/main.ts"
+      ],
+      "compilerOptions": {
+        "baseUrl": ".",
+        "outDir": "./dist",
+        "noImplicitAny": true,
+        "target": "es5",
+        "experimentalDecorators": true,
+        "allowJs": true,
+        "allowSyntheticDefaultImports": true,
+     +  "sourceMap": true,
+        "paths": {
+          "shared/*": ["src/app/shared/*"],
+          "components/*": ["src/app/components/*"]
+        },
+        "lib": [
+          "es2015",
+          "dom"
+        ]
+      },
+      "exclude": [
+        "node_modules"
+      ]
     }
 
-In tsconfig.json, add `"sourceMap": true` to the `compilerOptions` object.
+And in `karma.conf.js`, add `'karma-typescript'` to the `frameworks` and
+`reporters` arrays:
 
-And in karma.conf.js, add `'karma-typescript'` to the `frameworks` and
-`reporters` arrays.
+----
+-   frameworks: ['mocha', 'should-sinon', 'sinon', 'should'],
++   frameworks: ['mocha', 'should-sinon', 'sinon', 'should', 'karma-typescript'],
+
+    files: [
+      'src/app/components/auth/keycloak.stub.js',
+      'src/tests.webpack.js'
+    ],
+
+    preprocessors: {
+      'src/app/components/auth/keycloak.stub.js': ['webpack', 'sourcemap'],
+      'src/tests.webpack.js': ['webpack', 'sourcemap']
+    },
+
+-   reporters: ['mocha', 'beep', 'junit', 'coverage-istanbul'],
++   reporters: ['mocha', 'beep', 'junit', 'coverage-istanbul', 'karma-typescript'],
+----
