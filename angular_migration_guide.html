@@ -480,6 +480,34 @@ simplistic example code for both AngularJS and Angular, doesn&#8217;t cover some
 pitfalls that can occur depending on the existing AngularJS project setup.
 This guide aims only to help with these specific hurdles.</p>
 </div>
+<div class="paragraph">
+<p>First, we will look at the project structure. If this structure does not match
+your project then you can either reorganize your project, or more simply,
+modify some of the configuration files to match your structure. The particular
+files to modify are <code>karma.conf.js</code>, <code>webpack.config.js</code>, and once it&#8217;s added,
+<code>tsconfig.json</code>.</p>
+</div>
+<div class="paragraph">
+<p>We will then proceed to add TypeScript dependencies to the project and set it
+up as an Angular hybrid app, but leave Angular "empty". In the next section we
+will talk about "upgrading" existing AngularJS service code so that it is
+available in Angular.</p>
+</div>
+<div class="paragraph">
+<p>Then, once AngularJS services are ready to be shared with Angular components,
+we will walk through how to migrade an AngularJS component to Angular and
+TypeScript. Eventually, all AngularJS components will be migrated, and the app
+can be reconfigured into a pure Angular app (this is not covered in this
+document).</p>
+</div>
+<div class="paragraph">
+<p>Finally, we will conclude with unit test modifications so that the test suite
+can handle side-by-side AngularJS and Angular/TypeScript sources and tests.
+You will even be able to migrate a component&#8217;s sources to TypeScript while
+leaving its tests in JavaScript, which can help ensure that the language port
+is done without behavioural side effects. An addendum follows describing how to
+configure code coverage reporting using Istanbul.</p>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -1361,7 +1389,7 @@ following.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-10-19 17:16:19 EDT
+Last updated 2017-10-19 17:38:34 EDT
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">

@@ -31,6 +31,30 @@ simplistic example code for both AngularJS and Angular, doesn't cover some
 pitfalls that can occur depending on the existing AngularJS project setup.
 This guide aims only to help with these specific hurdles.
 
+First, we will look at the project structure. If this structure does not match
+your project then you can either reorganize your project, or more simply,
+modify some of the configuration files to match your structure. The particular
+files to modify are `karma.conf.js`, `webpack.config.js`, and once it's added,
+`tsconfig.json`.
+
+We will then proceed to add TypeScript dependencies to the project and set it
+up as an Angular hybrid app, but leave Angular "empty". In the next section we
+will talk about "upgrading" existing AngularJS service code so that it is
+available in Angular.
+
+Then, once AngularJS services are ready to be shared with Angular components,
+we will walk through how to migrade an AngularJS component to Angular and
+TypeScript. Eventually, all AngularJS components will be migrated, and the app
+can be reconfigured into a pure Angular app (this is not covered in this
+document).
+
+Finally, we will conclude with unit test modifications so that the test suite
+can handle side-by-side AngularJS and Angular/TypeScript sources and tests.
+You will even be able to migrate a component's sources to TypeScript while
+leaving its tests in JavaScript, which can help ensure that the language port
+is done without behavioural side effects. An addendum follows describing how to
+configure code coverage reporting using Istanbul.
+
 include::project_structure.adoc[]
 
 include::adding_typescript.adoc[]
