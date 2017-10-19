@@ -1,17 +1,24 @@
 == Testing
 
-Not all of the webpack configuration is relevant for karma test runs. If you
-include the entire webpack config, I suggest removing that in favour of
-including only the module, resolve, and devtool parts.
+The https://angular.io/guide/upgrade#appendix-upgrading-phonecat-tests[official document]
+talks about upgrading tests, but in our setup we are using Mocha, Should, and
+Sinon, which are third party test utilities/libraries.
 
-You will also need to install type declarations for test frameworks and
+Not all of the Webpack configuration is relevant for Karma test runs. If you
+include the entire Webpack config, I suggest removing that in favour of
+including only the module, resolve, and devtool parts, as shown in the
+example `karma.conf.js` below.
+
+You will also need to install type declarations for the test frameworks and
 libraries: `@types/mocha`, `@types/should`, `@types/sinon`.
 
 Using karma in the "main" mode where karma itself discovers all source and test
 files resulted in Node out-of-memory errors, so our recommendation is to use
 the alternative mode where you point karma at a source file that does a
-require.context to bundle all of the files together at once. In our case we
+require.context() to bundle all of the files together at once. In our case we
 have named this file `tests.webpack.js` and placed it under our `src/`.
+See https://github.com/webpack-contrib/karma-webpack/tree/ec1badfa143c643a0b5f5d96e99e1e931527f9b3[Alternative Usage]
+in the karma-webpack README for more information.
 
 .karma.conf.js
 [source,javascript]

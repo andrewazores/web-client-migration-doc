@@ -1042,20 +1042,28 @@ code.</p>
 <h2 id="_testing"><a class="link" href="#_testing">Testing</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Not all of the webpack configuration is relevant for karma test runs. If you
-include the entire webpack config, I suggest removing that in favour of
-including only the module, resolve, and devtool parts.</p>
+<p>The <a href="https://angular.io/guide/upgrade#appendix-upgrading-phonecat-tests">official document</a>
+talks about upgrading tests, but in our setup we are using Mocha, Should, and
+Sinon, which are third party test utilities/libraries.</p>
 </div>
 <div class="paragraph">
-<p>You will also need to install type declarations for test frameworks and
+<p>Not all of the Webpack configuration is relevant for Karma test runs. If you
+include the entire Webpack config, I suggest removing that in favour of
+including only the module, resolve, and devtool parts, as shown in the
+example <code>karma.conf.js</code> below.</p>
+</div>
+<div class="paragraph">
+<p>You will also need to install type declarations for the test frameworks and
 libraries: <code>@types/mocha</code>, <code>@types/should</code>, <code>@types/sinon</code>.</p>
 </div>
 <div class="paragraph">
 <p>Using karma in the "main" mode where karma itself discovers all source and test
 files resulted in Node out-of-memory errors, so our recommendation is to use
 the alternative mode where you point karma at a source file that does a
-require.context to bundle all of the files together at once. In our case we
-have named this file <code>tests.webpack.js</code> and placed it under our <code>src/</code>.</p>
+require.context() to bundle all of the files together at once. In our case we
+have named this file <code>tests.webpack.js</code> and placed it under our <code>src/</code>.
+See <a href="https://github.com/webpack-contrib/karma-webpack/tree/ec1badfa143c643a0b5f5d96e99e1e931527f9b3">Alternative Usage</a>
+in the karma-webpack README for more information.</p>
 </div>
 <div class="listingblock">
 <div class="title">karma.conf.js</div>
