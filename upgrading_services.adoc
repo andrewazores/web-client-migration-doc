@@ -1,4 +1,4 @@
-== Upgrading AngularJS services for use in Angular
+== Bootstrapping and Upgrading AngularJS services for use in Angular
 
 App startup order:
 
