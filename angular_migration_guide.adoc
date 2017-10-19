@@ -62,5 +62,3 @@ include::adding_typescript.adoc[]
 include::upgrading_services.adoc[]
 
 include::testing.adoc[]
-
-include::code_coverage.adoc[]

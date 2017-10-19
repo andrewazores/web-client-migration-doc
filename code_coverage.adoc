@@ -1,4 +1,4 @@
-== Code Coverage with Istanbul
+=== Code Coverage with Istanbul
 
 Much of the difficulties had with setting up Istanbul code coverage tooling
 were hidden in the details of the test environment setup in the previous

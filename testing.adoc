@@ -185,3 +185,5 @@ window.tmsGatewayUrl = 'http://localhost:8888/';
 const testsContext = require.context('./app', true, /\.spec\.(js|ts)$/);
 testsContext.keys().forEach(testsContext);
 ----
+
+include::code_coverage.adoc[]
