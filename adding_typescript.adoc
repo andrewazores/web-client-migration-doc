@@ -1,5 +1,20 @@
 == Adding TypeScript and Angular 4
 
+This section is a supplement to
+https://angular.io/guide/upgrade#migrating-to-typescript[Migrating to TypeScript]
+in the official Angular upgrade document.
+
+The official document suggests migrating AngularJS code to TypeScript first,
+while keeping it in AngularJS, and then switching frameworks later down the
+line. This is feasible, however, it's an additional whole-project upgrade step,
+so it seemed more worthwhile to make the TypeScript migrations on the fly
+alongside migrating components from AngularJS to Angular.
+
+Thermostat Web-Client was already using JavaScript classes with AngularJS for
+controllers and services, as well as using component directives, which makes
+things easier. If you are not already following these patterns then that might
+be a good first step.
+
 Add `@angular/core`, `@angular/platform-browser`, `@angular/upgrade`,
 `@types/angular`, `@types/core-js`, `reflect-metadata`, `ts-loader`,
 `typescript`, `zone.js` npm dependencies.
