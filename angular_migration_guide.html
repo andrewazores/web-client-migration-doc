@@ -436,6 +436,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toc" class="toc">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
+<li><a href="#_project_structure">Project Structure</a></li>
 <li><a href="#_adding_typescript_and_angular_4">Adding TypeScript and Angular 4</a></li>
 <li><a href="#_upgrading_angularjs_services_for_use_in_angular">Upgrading AngularJS services for use in Angular</a></li>
 <li><a href="#_testing">Testing</a></li>
@@ -468,6 +469,84 @@ over any kind of pre-bootstrap application logic, and since it uses only very
 simplistic example code for both AngularJS and Angular, doesn&#8217;t cover some
 pitfalls that can occur depending on the existing AngularJS project setup.
 This guide aims only to help with these specific hurdles.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_project_structure"><a class="link" href="#_project_structure">Project Structure</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This document assumes that your existing project structure looks similar to this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>.
+├── .babelrc
+├── CONTRIBUTING.md
+├── COPYING
+├── .eslintignore
+├── .eslintrc.test.yaml
+├── .eslintrc.yaml
+├── .htmlhintrc
+├── karma.conf.js
+├── LICENSE
+├── package.json
+├── README.md
+├── src
+│   ├── app
+│   │   ├── app.module.js
+│   │   ├── app-root.component.js
+│   │   ├── app-root.controller.js
+│   │   ├── app-root.controller.spec.js
+│   │   ├── app-root.html
+│   │   ├── app.routing.js
+│   │   ├── app.routing.spec.js
+│   │   ├── auth-interceptor.factory.js
+│   │   ├── auth-interceptor.factory.spec.js
+│   │   ├── components
+│   │   │   ├── about
+│   │   │   │   ├── about.component.js
+│   │   │   │   ├── about.controller.js
+│   │   │   │   ├── about.controller.spec.js
+│   │   │   │   ├── about.html
+│   │   │   │   ├── about.routing.js
+│   │   │   │   └── about.routing.spec.js
+│   │   ├── index.html
+│   │   └── shared
+│   │       ├── components
+│   │       │   ├── components.module.js
+│   │       │   ├── customizable-error-message
+│   │       │   │   ├── customizable-error-message.component.js
+│   │       │   │   └── customizable-error-message.html
+│   │       ├── config
+│   │       │   ├── config.module.js
+│   │       │   └── config.module.spec.js
+│   │       ├── filters
+│   │       │   ├── filters.module.js
+│   │       │   ├── timestamp-to-date.filter.js
+│   │       │   └── timestamp-to-date.filter.spec.js
+│   │       ├── services
+│   │       │   ├── local-storage.service.js
+│   │       │   ├── local-storage.service.spec.js
+│   │       │   ├── services.module.js
+│   │       │   └── websocket-factory.service.js
+│   │       └── templates
+│   │           └── 404.html
+│   ├── assets
+│   │   ├── images
+│   │   │   ├── favicon.png
+│   │   │   ├── landing-image.png
+│   │   └── scss
+│   │       ├── app.scss
+│   │       ├── main.scss
+│   │       └── palette.scss
+│   └── tests.webpack.js
+└── webpack.config.js</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Portions of this document will make reference to or contain code snippets that
+assume a similar project structure.</p>
 </div>
 </div>
 </div>
@@ -1240,7 +1319,7 @@ following.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-10-05 10:11:00 EDT
+Last updated 2017-10-19 11:24:32 EDT
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">

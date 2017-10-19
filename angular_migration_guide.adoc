@@ -23,6 +23,8 @@ simplistic example code for both AngularJS and Angular, doesn't cover some
 pitfalls that can occur depending on the existing AngularJS project setup.
 This guide aims only to help with these specific hurdles.
 
+include::project_structure.adoc[]
+
 include::adding_typescript.adoc[]
 
 include::upgrading_services.adoc[]

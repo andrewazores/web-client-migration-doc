@@ -1,0 +1,71 @@
+== Project Structure
+
+This document assumes that your existing project structure looks similar to this:
+
+----
+.
+├── .babelrc
+├── CONTRIBUTING.md
+├── COPYING
+├── .eslintignore
+├── .eslintrc.test.yaml
+├── .eslintrc.yaml
+├── .htmlhintrc
+├── karma.conf.js
+├── LICENSE
+├── package.json
+├── README.md
+├── src
+│   ├── app
+│   │   ├── app.module.js
+│   │   ├── app-root.component.js
+│   │   ├── app-root.controller.js
+│   │   ├── app-root.controller.spec.js
+│   │   ├── app-root.html
+│   │   ├── app.routing.js
+│   │   ├── app.routing.spec.js
+│   │   ├── auth-interceptor.factory.js
+│   │   ├── auth-interceptor.factory.spec.js
+│   │   ├── components
+│   │   │   ├── about
+│   │   │   │   ├── about.component.js
+│   │   │   │   ├── about.controller.js
+│   │   │   │   ├── about.controller.spec.js
+│   │   │   │   ├── about.html
+│   │   │   │   ├── about.routing.js
+│   │   │   │   └── about.routing.spec.js
+│   │   ├── index.html
+│   │   └── shared
+│   │       ├── components
+│   │       │   ├── components.module.js
+│   │       │   ├── customizable-error-message
+│   │       │   │   ├── customizable-error-message.component.js
+│   │       │   │   └── customizable-error-message.html
+│   │       ├── config
+│   │       │   ├── config.module.js
+│   │       │   └── config.module.spec.js
+│   │       ├── filters
+│   │       │   ├── filters.module.js
+│   │       │   ├── timestamp-to-date.filter.js
+│   │       │   └── timestamp-to-date.filter.spec.js
+│   │       ├── services
+│   │       │   ├── local-storage.service.js
+│   │       │   ├── local-storage.service.spec.js
+│   │       │   ├── services.module.js
+│   │       │   └── websocket-factory.service.js
+│   │       └── templates
+│   │           └── 404.html
+│   ├── assets
+│   │   ├── images
+│   │   │   ├── favicon.png
+│   │   │   ├── landing-image.png
+│   │   └── scss
+│   │       ├── app.scss
+│   │       ├── main.scss
+│   │       └── palette.scss
+│   └── tests.webpack.js
+└── webpack.config.js
+----
+
+Portions of this document will make reference to or contain code snippets that
+assume a similar project structure.
