@@ -61,4 +61,6 @@ include::adding_typescript.adoc[]
 
 include::upgrading_services.adoc[]
 
+include::migrating_components.adoc[]
+
 include::testing.adoc[]
