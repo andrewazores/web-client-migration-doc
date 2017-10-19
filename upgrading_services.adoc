@@ -4,6 +4,11 @@ App startup order:
 
 Angular bootstrap -> AngularJS bootstrap -> AngularJS module configuration
 
+The official upgrade document talks about this
+https://angular.io/guide/upgrade#bootstrapping-hybrid-applications[here],
+but isn't so explicit about pitfalls that you may run across, depending on how
+your project is broken down into modules and how you register those modules.
+
 It's important to ensure that AngularJS module code is not actually executed
 until after everything has been initialized and both frameworks have been
 bootstrapped. In our case, the convention was for services, controllers, etc.

@@ -784,6 +784,12 @@ config.module.rules = [
 <p>Angular bootstrap &#8594; AngularJS bootstrap &#8594; AngularJS module configuration</p>
 </div>
 <div class="paragraph">
+<p>The official upgrade document talks about this
+<a href="https://angular.io/guide/upgrade#bootstrapping-hybrid-applications">here</a>,
+but isn&#8217;t so explicit about pitfalls that you may run across, depending on how
+your project is broken down into modules and how you register those modules.</p>
+</div>
+<div class="paragraph">
 <p>It&#8217;s important to ensure that AngularJS module code is not actually executed
 until after everything has been initialized and both frameworks have been
 bootstrapped. In our case, the convention was for services, controllers, etc.
