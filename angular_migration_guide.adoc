@@ -7,7 +7,7 @@ Andrew Azores <aazores@redhat.com>
 
 Lessons Learned in Migrating an AngularJS App To AngularJS/Angular Hybrid
 
-Assumptions: Using Webpack, karma/mocha/sinon/should/istanbul/eslint
+Assumptions: Using Webpack, ui-router, karma/mocha/sinon/should/istanbul/eslint
 
 The goal of this guide is to aid in migrating an existing AngularJS project to
 Angular and TypeScript, when also using Webpack and some additional test
