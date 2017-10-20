@@ -43,7 +43,7 @@ will talk about "upgrading" existing AngularJS service code so that it is
 available in Angular.
 
 Then, once AngularJS services are ready to be shared with Angular components,
-we will walk through how to migrade an AngularJS component to Angular and
+we will walk through how to migrate an AngularJS component to Angular and
 TypeScript. Eventually, all AngularJS components will be migrated, and the app
 can be reconfigured into a pure Angular app (this is not covered in this
 document).
