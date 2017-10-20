@@ -23,7 +23,7 @@ dependencies cropping up depending on which files are imported when.
 
 This is also an issue if you use Webpack's require.context in order to do
 build-time dynamic imports. In this case, you must ensure that any source files
-which are `require()` d only export JavaScript modules, functions, etc., but
+which are imported via `require()` only export JavaScript modules, functions, etc., but
 do *not* immediately declare any new Angular modules (using
 `angular.module("foo", [])` - note the second, array parameter). If the file
 does need to declare a new Angular module then this logic should be moved into
