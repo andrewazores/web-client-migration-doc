@@ -162,6 +162,18 @@ This Angular module sets up our AngularJS service providers for DI under Angular
 +}
 ----
 
+WARNING: Here we have a different approach from what the official Angular
+migration guide suggests. This approach works well for a stopgap short term
+solution to making services available in both frameworks, but it comes with
+some important caveats. The advantage of this approach is that it allows for
+the services and filters to be made available to both frameworks very quickly
+with relatively little code written. The disadvantage is that AngularJS and
+Angular will each retain their own runtime instance of each service - this
+means there will be a small amount of additional memory used, but it also
+causes difficulties for services that maintain internal state in memory. For
+stateful services the best bet is to use the `downgradeInjectable` technique
+laid out in the official guide.
+
 This file defines Angular providers that import class definitions from shared
 services implementation files and uses those definitions as both the injection
 token and the implementation for a service. Here we are also injecting the

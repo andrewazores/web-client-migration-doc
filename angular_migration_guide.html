@@ -988,6 +988,28 @@ relating to our auth interceptor and services module:</p>
 +}</code></pre>
 </div>
 </div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+Here we have a different approach from what the official Angular
+migration guide suggests. This approach works well for a stopgap short term
+solution to making services available in both frameworks, but it comes with
+some important caveats. The advantage of this approach is that it allows for
+the services and filters to be made available to both frameworks very quickly
+with relatively little code written. The disadvantage is that AngularJS and
+Angular will each retain their own runtime instance of each service - this
+means there will be a small amount of additional memory used, but it also
+causes difficulties for services that maintain internal state in memory. For
+stateful services the best bet is to use the <code>downgradeInjectable</code> technique
+laid out in the official guide.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>This file defines Angular providers that import class definitions from shared
 services implementation files and uses those definitions as both the injection
