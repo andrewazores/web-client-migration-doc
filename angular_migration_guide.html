@@ -499,7 +499,7 @@ available in Angular.</p>
 </div>
 <div class="paragraph">
 <p>Then, once AngularJS services are ready to be shared with Angular components,
-we will walk through how to migrade an AngularJS component to Angular and
+we will walk through how to migrate an AngularJS component to Angular and
 TypeScript. Eventually, all AngularJS components will be migrated, and the app
 can be reconfigured into a pure Angular app (this is not covered in this
 document).</p>
@@ -847,7 +847,7 @@ dependencies cropping up depending on which files are imported when.</p>
 <div class="paragraph">
 <p>This is also an issue if you use Webpack&#8217;s require.context in order to do
 build-time dynamic imports. In this case, you must ensure that any source files
-which are <code>require()</code> d only export JavaScript modules, functions, etc., but
+which are imported via <code>require()</code> only export JavaScript modules, functions, etc., but
 do <strong>not</strong> immediately declare any new Angular modules (using
 <code>angular.module("foo", [])</code> - note the second, array parameter). If the file
 does need to declare a new Angular module then this logic should be moved into
@@ -1073,7 +1073,285 @@ code.</p>
 <div class="sect1">
 <h2 id="_migrating_components"><a class="link" href="#_migrating_components">Migrating Components</a></h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>The <a href="https://angular.io/guide/upgrade#phonecat-upgrade-tutorial">official guide</a>
+has a good section covering this phase, but we&#8217;ll go over another example here
+for the sake of completeness.</p>
+</div>
+<div class="paragraph">
+<p>Migrating AngularJS directive components to Angular/TypeScript is quite easy.
+The best migration path is to construct a tree of your app&#8217;s components and
+proceed with migrating the components starting from the leaves and working your
+way up to the root. This gives you small, bite-sized pieces to work with, and
+allows for easier verification of the resulting app image by simply verifying
+each component as it is migrated. This will also give you the opportunity to
+ensure that all of your services and filters are correctly migrated.</p>
+</div>
+<div class="paragraph">
+<p>A good first step is to rewrite the component controller in TypeScript while
+leaving it registered with AngularJS. When you do this, you can leave the
+controller tests in JavaScript at first, and use them as a regression test
+against the newly-ported TypeScript controller. Once you are satisfied that the
+controller has been properly ported, you can migrate the tests over to
+TypeScript as well.</p>
+</div>
+<div class="paragraph">
+<p>The second step will be to convert the AngularJS component into an Angular
+component.</p>
+</div>
+<div class="paragraph">
+<p>In AngularJS, you have a component configuration object which
+provides an implementation of the controller and the text of the view template,
+like so:</p>
+</div>
+<div class="listingblock">
+<div class="title">about.component.js</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-javascript hljs" data-lang="javascript">import authModule from 'components/auth/auth.module.js';
+import controller from './about.controller.js';
 
+export default angular
+  .module('aboutComponent', [
+    authModule,
+    controller
+  ])
+  .component('about', {
+    bindings: {
+      username: '&lt;'
+    },
+    controller: 'AboutController',
+    template: require('./about.html')
+  })
+  .name;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Here is the <code>AboutController</code> source corresponding to the component above:</p>
+</div>
+<div class="listingblock">
+<div class="title">about.controller.js</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-javascript hljs" data-lang="javascript">import services from 'shared/services/services.module.js';
+
+class AboutController {
+  constructor (authService) {
+    this.username = authService.username;
+  }
+}
+
+export default angular
+  .module('about.controller', [
+    services
+  ])
+  .controller('AboutController', AboutController)
+  .name;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In Angular, the controller logic will belong to the Component itself, and the
+view template will be attached to the Component class via annotation metadata.
+The migrated component looks like this:</p>
+</div>
+<div class="listingblock">
+<div class="title">about.component.ts</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-typescript hljs" data-lang="typescript">import {
+  Component,
+  Inject,
+  InjectionToken,
+  OnInit,
+} from "@angular/core";
+
+import {
+  AuthServiceToken,
+  IAuthService,
+} from "components/auth/auth-service.interface";
+
+@Component({
+  selector: "example",
+  template: require("./about.html"),
+})
+export class AboutComponent implements OnInit {
+
+  private username: string;
+
+  constructor(
+    @Inject(AuthServiceToken) private authService: IAuthService,
+  ) {}
+
+  public ngOnInit(): void {
+    this.username = this.authService.username;
+  }
+
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We will also need a feature Module, which in this case will only contain the
+About Component. In a more complex Module with more features there could be
+more Components added to the annotation metadata arrays.</p>
+</div>
+<div class="listingblock">
+<div class="title">about.module.ts</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-typescript hljs" data-lang="typescript">import { NgModule } from "@angular/core";
+
+import { CommonModule } from "@angular/common";
+
+import { AuthModule } from "components/auth/auth.module";
+import { AboutComponent } from "./about.component";
+
+@NgModule({
+  declarations: [
+    AboutComponent,
+  ],
+  entryComponents: [
+    AboutComponent,
+  ],
+  exports: [
+    AboutComponent,
+  ],
+  imports: [
+    AuthModule,
+    CommonModule,
+  ],
+})
+export class AboutModule {}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You&#8217;ll need to include this new module in your app&#8217;s module tree. Let&#8217;s import
+it direcly from the root app module.</p>
+</div>
+<div class="listingblock">
+<div class="title">app.module.ts</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-typescript hljs" data-lang="typescript">+   import { AboutModule } from "./components/about/about.module";
++
+    const upgradeAdapter = new UpgradeAdapter(forwardRef(() =&gt; AppModule));
+    @NgModule({
+      declarations: [],
+      imports: [
+        // Angular core modules
+        BrowserModule,
+        HttpClientModule,
+        UpgradeModule,
+
+        AuthModule,
+        ServicesModule,
+        FiltersModule,
++
++       AboutModule,
+      ],
+    })</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The view template HTML will also need some touching up to use Angular template
+attributes, rather than AngularJS:</p>
+</div>
+<div class="listingblock">
+<div class="title">about.html</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-html hljs" data-lang="html"> &lt;div class="container container-cards-pf"&gt;
+   &lt;div class="col-md-12"&gt;
+     &lt;div class="row"&gt;
+       &lt;div class="col-md-3 hidden-sm hidden-xs"&gt;
+         &lt;img src="~images/landing-image.png"/&gt;
+       &lt;/div&gt;
+       &lt;div class="col-md-9"&gt;
+         &lt;h1&gt;&lt;a class="clickable" ui-sref="default"&gt;Thermostat&lt;/a&gt;&lt;/h1&gt;
+         &lt;h2&gt;About&lt;/h2&gt;
+         &lt;p&gt;&lt;a href="http://icedtea.classpath.org/thermostat"&gt;Thermostat&lt;/a&gt; is a free and open source distributed instrumentation tool for the Hotspot JVM.&lt;/p&gt;
+         &lt;h2&gt;Version&lt;/h2&gt;
+         &lt;dl class="dl-horizontal"&gt;
+           &lt;dt&gt;Web Client&lt;/dt&gt;
+           &lt;dd&gt;0.1.0&lt;/dd&gt;
+         &lt;/dl&gt;
+         &lt;p&gt;The &lt;a href="http://icedtea.classpath.org/thermostat/documentation"&gt;documentation&lt;/a&gt; helps you learn about Thermostat and start exploring its features.&lt;/p&gt;
+-        &lt;h2 ng-if="$ctrl.username"&gt;Account&lt;/h2&gt;
+-        &lt;p ng-if="$ctrl.username"&gt;You are currently logged in under the user account &lt;stong id="username"&gt;{{username}}&lt;/p&gt;
++        &lt;div *ngIf="username"&gt;
++          &lt;h2&gt;Account&lt;/h2&gt;
++          &lt;p&gt;You are currently logged in under the user account &lt;strong id="username"&gt;{{username}}&lt;/strong&gt;.&lt;/p&gt;
++        &lt;/div&gt;
+     &lt;/div&gt;
+   &lt;/div&gt;
+ &lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Our ui-router definition will also need to change somewhat, but the core
+<code>$stateProvider</code> configuration remains the same.</p>
+</div>
+<div class="listingblock">
+<div class="title">about.routing.js</div>
+<div class="content">
+<pre>function config ($stateProvider) {
+  'ngInject';
+
+  $stateProvider.state('about', {
+    url: '/about',
+    component: 'about',
+    resolve: {
+      lazyLoad: ($q, $ocLazyLoad) =&gt; {
+        'ngInject';
+        return $q(resolve =&gt; {
+          require.ensure(['./about.component.js'], () =&gt; {
+            let module = require('./about.component.js');
+            $ocLazyLoad.load({ name: module.default });
+            resolve(module);
+          });
+        });
+      }
+    }
+  });
+}
+
+export { config };
+
+export default angular
+  .module('aboutRouter', [
+    'ui.router',
+    'ui.bootstrap'
+  ])
+  .config(config)
+  .name;</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">about.routing.ts</div>
+<div class="content">
+<pre>import * as angular from "angular";
+
+import { UpgradeAdapter } from "@angular/upgrade";
+import { StateProvider } from "@uirouter/angularjs";
+
+import { AboutComponent } from "./about.component";
+import { AboutModule } from "./about.module";
+
+const upgradeAdapter = new UpgradeAdapter(AboutModule);
+
+function config($stateProvider: StateProvider): void {
+  $stateProvider.state("about", {
+    component: "about",
+    url: "/about",
+  });
+}
+
+const mod = angular
+  .module("aboutRouter", [
+    "ui.router",
+    "ui.bootstrap",
+  ])
+  .config(["$stateProvider", config])
+  .directive("about", upgradeAdapter.downgradeNg2Component(AboutComponent) as angular.IDirectiveFactory);
+
+export default mod.name;
+
+export { config };</pre>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -1397,7 +1675,7 @@ following.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-10-20 14:23:41 EDT
+Last updated 2017-10-20 14:28:03 EDT
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
