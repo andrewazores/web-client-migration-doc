@@ -1027,6 +1027,16 @@ registered by AngularJS, as well as registered with Angular. This results in
 the service class being injectable and usable by both AngularJS and Angular
 code.</p>
 </div>
+<div class="paragraph">
+<p>This <code>upgraded-providers</code> approach example also shows all services being
+provided with the <code>$injector</code> service (via DI), rather than their exact
+specific DI dependencies. In a real scenario, <code>$injector</code> should be replaced
+by the list of actual dependencies for each service. However, in some cases,
+the <code>$injector</code> does need to be directly used - specifically, if the service
+has dependencies on AngularJS-only services (<code>$q</code> for example). You will be
+able to grab the <code>$q</code> service via <code>$injector.get</code>, but <code>$q</code> won&#8217;t be resolvable
+by the Angular injector.</p>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-typescript hljs" data-lang="typescript">--- /dev/null

@@ -189,6 +189,15 @@ registered by AngularJS, as well as registered with Angular. This results in
 the service class being injectable and usable by both AngularJS and Angular
 code.
 
+This `upgraded-providers` approach example also shows all services being
+provided with the `$injector` service (via DI), rather than their exact
+specific DI dependencies. In a real scenario, `$injector` should be replaced
+by the list of actual dependencies for each service. However, in some cases,
+the `$injector` does need to be directly used - specifically, if the service
+has dependencies on AngularJS-only services (`$q` for example). You will be
+able to grab the `$q` service via `$injector.get`, but `$q` won't be resolvable
+by the Angular injector.
+
 [source,typescript]
 ----
 --- /dev/null
